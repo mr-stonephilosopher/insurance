@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+neo4j
+pandas
+xgboost
+shap
+celery
+redis
+pydantic
+pydantic-settings
+python-multipart
+fhir.resources
