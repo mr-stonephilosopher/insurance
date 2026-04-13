@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Building2, ShieldCheck, UserCheck, BarChart3, ArrowRight, Wand2 } from 'lucide-react';
+import { Building2, ShieldCheck, UserCheck, BarChart3, ArrowRight, Wand2, TrendingUp } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -64,22 +64,101 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* Adjuster Dashboard Quick Link */}
-      <div className="mt-16 w-full max-w-4xl">
-        <Link href="/dashboard" className="border border-gray-200 rounded-lg p-6 flex items-center justify-between bg-white hover:border-blue-400 hover:shadow-md transition-all">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <BarChart3 className="text-blue-600 w-6 h-6" />
+      {/* Insurance Type Selection */}
+      <div className="mt-16 w-full max-w-6xl">
+        <h2 className="text-2xl font-bold text-gray-900 text-center mb-12">Select Insurance Type</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          {/* Health Insurance */}
+          <Link href="/insurance/health" className="group">
+            <div className="border border-gray-200 rounded-xl p-8 h-full bg-white hover:border-blue-400 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-4 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors">
+                  <ShieldCheck className="text-blue-600 w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Health Insurance</h3>
+                  <p className="text-gray-600">Medical claims, hospital billing, prescription fraud detection</p>
+                </div>
+              </div>
+              <div className="flex items-center text-blue-600 font-medium group-hover:gap-2 transition-all">
+                Get Started <ArrowRight className="ml-1 w-5 h-5" />
+              </div>
             </div>
-            <div>
-              <h3 className="font-medium text-gray-900">Adjuster Dashboard</h3>
-              <p className="text-sm text-gray-600">Review flagged cases and AI explainability reports.</p>
+          </Link>
+
+          {/* Car/Auto Insurance */}
+          <Link href="/insurance/auto" className="group">
+            <div className="border border-gray-200 rounded-xl p-8 h-full bg-white hover:border-blue-400 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-4 bg-green-50 rounded-xl group-hover:bg-green-100 transition-colors">
+                  <Building2 className="text-green-600 w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Car/Auto Insurance</h3>
+                  <p className="text-gray-600">Vehicle damage, accident claims, repair fraud detection</p>
+                </div>
+              </div>
+              <div className="flex items-center text-green-600 font-medium group-hover:gap-2 transition-all">
+                Get Started <ArrowRight className="ml-1 w-5 h-5" />
+              </div>
             </div>
+          </Link>
+
+          {/* Term/Life Insurance */}
+          <Link href="/insurance/life" className="group">
+            <div className="border border-gray-200 rounded-xl p-8 h-full bg-white hover:border-blue-400 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-4 bg-purple-50 rounded-xl group-hover:bg-purple-100 transition-colors">
+                  <UserCheck className="text-purple-600 w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Term/Life Insurance</h3>
+                  <p className="text-gray-600">Life insurance claims, policy fraud detection</p>
+                </div>
+              </div>
+              <div className="flex items-center text-purple-600 font-medium group-hover:gap-2 transition-all">
+                Get Started <ArrowRight className="ml-1 w-5 h-5" />
+              </div>
+            </div>
+          </Link>
+
+          {/* Corporate/Property Insurance */}
+          <Link href="/insurance/corporate" className="group">
+            <div className="border border-gray-200 rounded-xl p-8 h-full bg-white hover:border-blue-400 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-4 bg-orange-50 rounded-xl group-hover:bg-orange-100 transition-colors">
+                  <Building2 className="text-orange-600 w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Corporate/Property Insurance</h3>
+                  <p className="text-gray-600">Business property, commercial claims, corporate fraud</p>
+                </div>
+              </div>
+              <div className="flex items-center text-orange-600 font-medium group-hover:gap-2 transition-all">
+                Get Started <ArrowRight className="ml-1 w-5 h-5" />
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="border-t border-gray-200 pt-8">
+          <div className="flex justify-center gap-6">
+            <Link 
+              href="/login" 
+              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link 
+              href="/submit" 
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Submit Claim
+            </Link>
           </div>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-            Open Dashboard
-          </button>
-        </Link>
+        </div>
       </div>
 
       <footer className="mt-20 text-gray-500 text-sm flex items-center gap-6">

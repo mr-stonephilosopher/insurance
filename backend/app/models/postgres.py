@@ -1,17 +1,59 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, JSON, ForeignKey, Boolean, Text
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 import uuid
 
 Base = declarative_base()
 
+class Customer(Base):
+    __tablename__ = "customers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    aadhaar = Column(String(14), unique=True, nullable=True)
+    pan = Column(String(10), unique=True, nullable=True)
+    name = Column(String(100), nullable=False)
+    phone = Column(String(20), nullable=False)
+    email = Column(String(100), unique=True, nullable=True)
+    address = Column(Text, nullable=True)
+    city = Column(String(50), nullable=True)
+    state = Column(String(50), nullable=True)
+    pincode = Column(String(6), nullable=True)
+    digilocker_verified = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationship with claims
+    claims = relationship("Claim", back_populates="customer")
+
+class Insurer(Base):
+    __tablename__ = "insurers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    company_name = Column(String(100), nullable=False)
+    license_number = Column(String(20), unique=True, nullable=False)
+    contact_person = Column(String(100), nullable=True)
+    phone = Column(String(20), nullable=True)
+    email = Column(String(100), unique=True, nullable=True)
+    website = Column(String(100), nullable=True)
+    irda_registration = Column(String(20), nullable=True)
+    gst_number = Column(String(15), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationship with claims
+    claims = relationship("Claim", back_populates="insurer")
+
 class Claim(Base):
     __tablename__ = "claims"
 
     claim_id = Column(String(100), primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
+    insurer_id = Column(Integer, ForeignKey("insurers.id"), nullable=True)
+    claim_type = Column(String(20), nullable=False)  # health, auto, life, corporate
     patient_name = Column(String(255), nullable=False)
-    total_amount = Column(Float, nullable=False)
+    total_amount = Column(Float, nullable=False)  # Amount in INR
     diagnosis_code = Column(String(50), nullable=True)
     diagnosis_description = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -35,6 +77,17 @@ class Claim(Base):
     itemized_billing = Column(JSON, nullable=True)
     service_date = Column(DateTime, nullable=True)
     submission_timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Indian context fields
+    documents = Column(JSON, nullable=True)  # List of document names
+    ai_summary = Column(Text, nullable=True)
+    risk_factors = Column(JSON, nullable=True)  # List of risk factors
+    processed_date = Column(DateTime, nullable=True)
+    reviewed_by = Column(String(100), nullable=True)
+    
+    # Relationships
+    customer = relationship("Customer", back_populates="claims")
+    insurer = relationship("Insurer", back_populates="claims")
 
 class FraudRing(Base):
     __tablename__ = "fraud_rings"
