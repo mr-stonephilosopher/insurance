@@ -70,8 +70,8 @@ def create_postgres_database():
         'host': os.getenv('POSTGRES_HOST', 'localhost'),
         'port': os.getenv('POSTGRES_PORT', '5432'),
         'database': os.getenv('POSTGRES_DB', 'bitwizard_insurance'),
-        'user': os.getenv('POSTGRES_USER', 'postgres'),
-        'password': os.getenv('POSTGRES_PASSWORD', 'password')
+        'user': os.getenv('POSTGRES_USER', 'smit'),
+        'password': os.getenv('POSTGRES_PASSWORD', '')
     }
     
     try:
@@ -160,7 +160,7 @@ def create_postgres_database():
         ''')
         
         # Video_calls table
-        cursor.execute(''''
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS video_calls (
                 id SERIAL PRIMARY KEY,
                 claim_id INTEGER REFERENCES claims(id),
@@ -291,37 +291,6 @@ def create_postgres_database():
                 ], random.randint(1, 3))
             else:
                 risk_factors = random.sample([
-                    'Business interruption fraud', 'Property value inflation',
-                    'Phantom vendor schemes', 'Employee collusion', 'Fake invoices'
-                ], random.randint(1, 3))
-            
-            cursor.execute('''
-                INSERT INTO claims (claim_id, customer_id, insurer_id, claim_type, amount_inr, 
-                                 status, fraud_score, severity, description, documents, ai_summary, 
-                                 risk_factors, submitted_date)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (claim_id) DO NOTHING
-            ''', (
-                f"{claim_type.upper()}-{random.randint(10000, 99999)}",
-                customer_id,
-                insurer_id,
-                claim_type,
-                amount,
-                random.choice(['pending', 'approved', 'rejected', 'under_review']),
-                fraud_score,
-                severity,
-                f"Sample {claim_type} insurance claim for Indian customer",
-                f"document_{i+1}.pdf,document_{i+2}.pdf",
-                f"AI analysis indicates {severity} risk with {len(risk_factors)} risk factors detected",
-                risk_factors,
-                datetime.now() - timedelta(days=random.randint(1, 30))
-            ))
-        
-        # Commit the transaction
-        conn.commit()
-        print("Sample data inserted successfully!")
-        
-        # Create views for analytics
         print("Creating analytics views...")
         
         cursor.execute('''

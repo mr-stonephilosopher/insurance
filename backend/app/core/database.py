@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 # Database configuration
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql://postgres:password@localhost:5432/fraud_detection"
+    "postgresql://smit@localhost:5432/bitwizard_insurance"
 )
 
 # Create engine with optimized settings

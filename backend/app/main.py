@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from .core.database import init_db
-from .api import claim_router
+from .api.claim import router as claim_router
+from .api.auth import router as auth_router
 import logging
 
 # Configure logging
@@ -25,6 +26,7 @@ async def startup_event():
 
 # Include routers
 app.include_router(claim_router.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1")
 
 @app.get("/")
 def read_root():

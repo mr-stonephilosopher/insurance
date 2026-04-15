@@ -44,7 +44,7 @@ export default function AdjusterDashboard() {
           {/* Core Grid Analysis */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 flex-1">
             <div className="min-h-[450px]">
-              <ClaimSummary />
+              <ClaimSummary claim={{}} />
             </div>
             <div className="min-h-[450px]">
               <AIVerdict />

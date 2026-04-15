@@ -15,6 +15,8 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import authService from '../../../lib/auth';
 
 interface Claim {
   claimId: string;
@@ -43,65 +45,85 @@ export default function CustomerDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [showOCRScanner, setShowOCRScanner] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
-    // Load customer data from localStorage
-    const userData = localStorage.getItem('bitwizard_user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      if (user.role === 'customer') {
-        setCustomer({
-          name: user.name || 'Sara Sharma',
-          email: user.email,
-          aadhaar: user.aadhaar || '1234 5678 9012',
-          phone: '+91-9876543210',
-          totalClaims: 12,
-          approvedClaims: 8,
-          pendingClaims: 4
-        });
+    // Check authentication and load customer data
+    if (!authService.isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
 
-        // Load sample claims
-        const sampleClaims: Claim[] = [
-          {
-            claimId: 'HEALTH-2024-001',
-            claimType: 'Health Insurance',
-            amount: 85000,
-            status: 'approved',
-            submittedDate: '2024-01-15',
-            description: 'Hospitalization for appendicitis surgery at Apollo Hospitals, Delhi',
-            documents: ['hospital_bill.pdf', 'discharge_summary.pdf', 'prescriptions.pdf'],
-            fraudScore: 0.15
-          },
-          {
-            claimId: 'AUTO-2024-002',
-            claimType: 'Car Insurance',
-            amount: 125000,
-            status: 'under_review',
-            submittedDate: '2024-01-20',
-            description: 'Car accident damage repair - Maruti Swift DL-4C-AB-1234',
-            documents: ['accident_report.pdf', 'repair_estimate.pdf', 'photos.zip'],
-            fraudScore: 0.35
-          },
-          {
-            claimId: 'LIFE-2024-003',
-            claimType: 'Life Insurance',
-            amount: 2500000,
-            status: 'pending',
-            submittedDate: '2024-01-22',
-            description: 'Term life insurance claim - policy holder death',
-            documents: ['death_certificate.pdf', 'policy_document.pdf'],
-            fraudScore: null
-          }
-        ];
-        setClaims(sampleClaims);
-      }
+    const user = authService.getStoredUser();
+    if (user && user.role === 'customer') {
+      setCustomer({
+        name: `${user.first_name} ${user.last_name}`,
+        email: user.email,
+        aadhaar: '1234 5678 9012',
+        phone: '+91-9876543210',
+        totalClaims: 12,
+        approvedClaims: 8,
+        pendingClaims: 4
+      });
+
+      // Load sample claims
+      const sampleClaims: Claim[] = [
+        {
+          claimId: 'HEALTH-2024-001',
+          claimType: 'Health Insurance',
+          amount: 85000,
+          status: 'approved',
+          submittedDate: '2024-01-15',
+          description: 'Hospitalization for appendicitis surgery at Apollo Hospitals, Delhi',
+          documents: ['hospital_bill.pdf', 'discharge_summary.pdf', 'prescriptions.pdf'],
+          fraudScore: 0.15
+        },
+        {
+          claimId: 'AUTO-2024-002',
+          claimType: 'Car Insurance',
+          amount: 125000,
+          status: 'under_review',
+          submittedDate: '2024-01-20',
+          description: 'Car accident damage repair - Maruti Swift DL-4C-AB-1234',
+          documents: ['accident_report.pdf', 'repair_estimate.pdf', 'photos.zip'],
+          fraudScore: 0.35
+        },
+        {
+          claimId: 'LIFE-2024-003',
+          claimType: 'Life Insurance',
+          amount: 2500000,
+          status: 'pending',
+          submittedDate: '2024-01-22',
+          description: 'Term life insurance claim - policy holder death',
+          documents: ['death_certificate.pdf', 'policy_document.pdf'],
+          fraudScore: undefined
+        }
+      ];
+      setClaims(sampleClaims);
+    } else {
+      router.push('/login');
     }
     setIsLoading(false);
   }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
+    const files = event.target.files;
+    if (files) {
+      setSelectedFiles(Array.from(files));
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const token = authService.getStoredToken();
+      if (token) {
+        await authService.logout(token);
+      }
+      authService.clearAuth();
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const handleOCRScan = () => {
@@ -182,8 +204,8 @@ export default function CustomerDashboard() {
                 Video Call
               </button>
               <button
-                onClick={() => window.location.href = '/login'}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
               >
                 Logout
               </button>

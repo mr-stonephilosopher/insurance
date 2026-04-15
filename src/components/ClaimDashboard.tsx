@@ -172,7 +172,7 @@ const ClaimDashboard: React.FC = () => {
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{highRiskClaims.length}</div>
             <p className="text-xs text-muted-foreground">
-              Score >= 75
+              Score &gt;= 75
             </p>
           </CardContent>
         </Card>

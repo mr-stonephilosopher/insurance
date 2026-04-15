@@ -17,6 +17,8 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import authService from '../../../lib/auth';
 
 interface Claim {
   claimId: string;
@@ -49,25 +51,29 @@ export default function InsurerDashboard() {
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [showAIDetails, setShowAIDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // Load insurer data from localStorage
-    const userData = localStorage.getItem('bitwizard_user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      if (user.role === 'insurer') {
-        setInsurer({
-          companyName: user.companyName || 'LIC of India',
-          licenseNumber: user.licenseNumber || 'IRDA-123456',
-          totalClaims: 156,
-          approvedClaims: 98,
-          rejectedClaims: 23,
-          pendingClaims: 35,
-          fraudDetectionRate: 24.1
-        });
+    // Check authentication and load insurer data
+    if (!authService.isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
 
-        // Load sample claims with AI analysis
-        const sampleClaims: Claim[] = [
+    const user = authService.getStoredUser();
+    if (user && user.role === 'insurer') {
+      setInsurer({
+        companyName: user.first_name ? `${user.first_name} ${user.last_name} Insurance` : 'LIC of India',
+        licenseNumber: 'IRDA-123456',
+        totalClaims: 156,
+        approvedClaims: 98,
+        rejectedClaims: 23,
+        pendingClaims: 35,
+        fraudDetectionRate: 24.1
+      });
+
+      // Load sample claims with AI analysis
+      const sampleClaims: Claim[] = [
           {
             claimId: 'HEALTH-2024-001',
             customerId: 'CUST-001',
@@ -127,7 +133,6 @@ export default function InsurerDashboard() {
         ];
         setClaims(sampleClaims);
       }
-    }
     setIsLoading(false);
   }, []);
 
@@ -139,9 +144,23 @@ export default function InsurerDashboard() {
     ));
   };
 
+  const handleLogout = async () => {
+    try {
+      const token = authService.getStoredToken();
+      if (token) {
+        await authService.logout(token);
+      }
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect to login even if logout fails
+      router.push('/login');
+    }
+  };
+
   const initiateVideoCall = (customerId: string) => {
     // In a real app, this would integrate with Zoom API
-    alert(`Video call initiated with customer Rs.{customerId}! Meeting room: BITWIZARD-Rs.{customerId.toUpperCase()}-12345`);
+    alert(`Video call initiated with customer ${customerId}! Meeting room: BITWIZARD-${customerId.toUpperCase()}-12345`);
   };
 
   const getStatusColor = (status: string) => {
@@ -210,8 +229,8 @@ export default function InsurerDashboard() {
             </div>
             <div className="flex gap-3">
               <button
-                onClick={() => window.location.href = '/login'}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
               >
                 Logout
               </button>

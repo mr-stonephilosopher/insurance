@@ -1,170 +1,307 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Wand2, ShieldCheck, UserCheck, BarChart3, ArrowRight, TrendingUp, FileText, Users, Building2, Eye, AlertTriangle, CheckCircle, Clock, DollarSign, Activity } from 'lucide-react';
 import Link from 'next/link';
-import { Building2, ShieldCheck, UserCheck, BarChart3, ArrowRight, Wand2, TrendingUp } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import authService from '../lib/auth';
 
-export default function Home() {
+interface DashboardStats {
+  totalClaims: number;
+  pendingClaims: number;
+  approvedClaims: number;
+  rejectedClaims: number;
+  fraudDetectionRate: number;
+  recentActivity: Array<{
+    id: string;
+    type: string;
+    description: string;
+    timestamp: string;
+    amount?: number;
+  }>;
+}
+
+export default function HomeDashboard() {
+  const [user, setUser] = useState<any>(null);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalClaims: 0,
+    pendingClaims: 0,
+    approvedClaims: 0,
+    rejectedClaims: 0,
+    fraudDetectionRate: 0,
+    recentActivity: []
+  });
+  const router = useRouter();
+
+  useEffect(() => {
+    const storedUser = authService.getStoredUser();
+    if (storedUser) {
+      setUser(storedUser);
+      // Load user-specific stats based on role
+      if (storedUser.role === 'insurer') {
+        setStats({
+          totalClaims: 156,
+          pendingClaims: 35,
+          approvedClaims: 98,
+          rejectedClaims: 23,
+          fraudDetectionRate: 24.1,
+          recentActivity: [
+            { id: '1', type: 'fraud_detected', description: 'Suspicious claim pattern detected', timestamp: '2024-01-15T10:30:00Z', amount: 50000 },
+            { id: '2', type: 'claim_approved', description: 'Auto claim approved', timestamp: '2024-01-15T09:15:00Z', amount: 25000 },
+            { id: '3', type: 'claim_submitted', description: 'New health claim submitted', timestamp: '2024-01-15T08:45:00Z', amount: 15000 },
+            { id: '4', type: 'document_uploaded', description: 'Medical documents uploaded', timestamp: '2024-01-15T07:30:00Z' }
+          ]
+        });
+      } else if (storedUser.role === 'customer') {
+        setStats({
+          totalClaims: 12,
+          pendingClaims: 4,
+          approvedClaims: 8,
+          rejectedClaims: 0,
+          fraudDetectionRate: 0,
+          recentActivity: [
+            { id: '1', type: 'claim_approved', description: 'Health insurance claim approved', timestamp: '2024-01-15T14:20:00Z', amount: 15000 },
+            { id: '2', type: 'claim_submitted', description: 'Car insurance claim submitted', timestamp: '2024-01-14T10:30:00Z', amount: 25000 },
+            { id: '3', type: 'document_uploaded', description: 'Accident photos uploaded', timestamp: '2024-01-14T09:15:00Z' }
+          ]
+        });
+      }
+    } else {
+      router.push('/login');
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const token = authService.getStoredToken();
+      if (token) {
+        await authService.logout(token);
+      }
+      setUser(null);
+      authService.clearAuth();
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 border-t-2 border-r-2 border-l-2"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isInsurer = user?.role === 'insurer';
+  const isCustomer = user?.role === 'customer';
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
-      {/* Clean header */}
-      <div className="absolute top-0 left-0 right-0 h-16 border-b border-gray-200 flex items-center px-8">
-        <div className="flex items-center gap-2">
-          <Wand2 className="w-6 h-6 text-blue-600" />
-          <span className="text-xl font-semibold text-gray-900">BitWizard</span>
-        </div>
-        <div className="ml-auto flex items-center gap-6 text-sm text-gray-600">
-          <span>Insurance Fraud Detection</span>
-          <span>v1.0</span>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="text-center max-w-4xl mb-16 mt-24">
-        <h1 className="text-4xl md:text-6xl font-light text-gray-900 mb-4">
-          BitWizard Fraud Detection
-        </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          AI-powered claim integrity verification with XGBoost, Neo4j Graph Analytics, and Explainable AI.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-        {/* Door A: Institutional */}
-        <Link href="/portal/institutional" className="group">
-          <div className="border border-gray-200 rounded-lg p-8 h-full bg-white hover:border-blue-400 hover:shadow-md transition-all">
-            <div>
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
-                <Building2 className="text-blue-600 w-6 h-6" />
-              </div>
-              <h2 className="text-xl font-medium text-gray-900 mb-2">Institutional Route</h2>
-              <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                Connect via NHCX/FHIR Gateway with itemized billing and clinical data for B2B processing.
-              </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Wand2 className="w-8 h-8 text-blue-600" />
+              <h1 className="ml-3 text-2xl font-bold text-gray-900">BitWizard Dashboard</h1>
+              <span className="ml-2 text-sm text-gray-500">
+                {isInsurer ? 'Insurance Provider Portal' : 'Customer Portal'}
+              </span>
             </div>
-            <div className="flex items-center text-blue-600 font-medium text-sm group-hover:gap-1 transition-all">
-              Initialize Gateway <ArrowRight className="ml-1 w-4 h-4" />
+            
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">Welcome back,</span>
+              <span className="text-sm font-medium text-gray-900">{user?.first_name} {user?.last_name}</span>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-red-600 hover:text-red-800 font-medium"
+              >
+                Logout
+              </button>
             </div>
           </div>
-        </Link>
+        </div>
+      </header>
 
-        {/* Door B: Direct Consumer */}
-        <Link href="/portal/consumer" className="group">
-          <div className="border border-gray-200 rounded-lg p-8 h-full bg-white hover:border-blue-400 hover:shadow-md transition-all">
-            <div>
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
-                <UserCheck className="text-blue-600 w-6 h-6" />
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Quick Stats */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">{stats.totalClaims}</div>
+                  <div className="text-sm text-gray-600">Total Claims</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-yellow-600">{stats.pendingClaims}</div>
+                  <div className="text-sm text-gray-600">Pending</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600">{stats.approvedClaims}</div>
+                  <div className="text-sm text-gray-600">Approved</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-red-600">{stats.rejectedClaims}</div>
+                  <div className="text-sm text-gray-600">Rejected</div>
+                </div>
+                {isInsurer && (
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-purple-600">{stats.fraudDetectionRate}%</div>
+                    <div className="text-sm text-gray-600">Fraud Detection Rate</div>
+                  </div>
+                )}
               </div>
-              <h2 className="text-xl font-medium text-gray-900 mb-2">Direct Consumer</h2>
-              <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                SDK-based submission with MediaPipe liveness, Google Play Integrity, and DigiLocker verification.
-              </p>
-            </div>
-            <div className="flex items-center text-blue-600 font-medium text-sm group-hover:gap-1 transition-all">
-              Launch Mobile SDK <ArrowRight className="ml-1 w-4 h-4" />
             </div>
           </div>
-        </Link>
-      </div>
 
-      {/* Insurance Type Selection */}
-      <div className="mt-16 w-full max-w-6xl">
-        <h2 className="text-2xl font-bold text-gray-900 text-center mb-12">Select Insurance Type</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          {/* Health Insurance */}
-          <Link href="/insurance/health" className="group">
-            <div className="border border-gray-200 rounded-xl p-8 h-full bg-white hover:border-blue-400 hover:shadow-lg transition-all">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-4 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors">
-                  <ShieldCheck className="text-blue-600 w-8 h-8" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Health Insurance</h3>
-                  <p className="text-gray-600">Medical claims, hospital billing, prescription fraud detection</p>
-                </div>
-              </div>
-              <div className="flex items-center text-blue-600 font-medium group-hover:gap-2 transition-all">
-                Get Started <ArrowRight className="ml-1 w-5 h-5" />
+          {/* Recent Activity */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
+              <div className="space-y-3">
+                {stats.recentActivity.slice(0, 5).map((activity) => (
+                  <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-full ${
+                        activity.type === 'fraud_detected' ? 'bg-red-100' :
+                        activity.type === 'claim_approved' ? 'bg-green-100' :
+                        activity.type === 'claim_submitted' ? 'bg-blue-100' :
+                        'bg-gray-100'
+                      }`}>
+                        {activity.type === 'fraud_detected' && <AlertTriangle className="w-4 h-4 text-red-600" />}
+                        {activity.type === 'claim_approved' && <CheckCircle className="w-4 h-4 text-green-600" />}
+                        {activity.type === 'claim_submitted' && <FileText className="w-4 h-4 text-blue-600" />}
+                        {activity.type === 'document_uploaded' && <Activity className="w-4 h-4 text-gray-600" />}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{activity.description}</div>
+                        <div className="text-xs text-gray-500">{activity.timestamp}</div>
+                        {activity.amount && (
+                          <div className="text-sm text-gray-600">₹{activity.amount.toLocaleString()}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(activity.timestamp).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </Link>
+          </div>
 
-          {/* Car/Auto Insurance */}
-          <Link href="/insurance/auto" className="group">
-            <div className="border border-gray-200 rounded-xl p-8 h-full bg-white hover:border-blue-400 hover:shadow-lg transition-all">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-4 bg-green-50 rounded-xl group-hover:bg-green-100 transition-colors">
-                  <Building2 className="text-green-600 w-8 h-8" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Car/Auto Insurance</h3>
-                  <p className="text-gray-600">Vehicle damage, accident claims, repair fraud detection</p>
-                </div>
-              </div>
-              <div className="flex items-center text-green-600 font-medium group-hover:gap-2 transition-all">
-                Get Started <ArrowRight className="ml-1 w-5 h-5" />
+          {/* Quick Actions */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+              <div className="space-y-3">
+                {isCustomer && (
+                  <>
+                    <Link
+                      href="/customer/submit-claim"
+                      className="flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <FileText className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Submit New Claim</div>
+                          <div className="text-xs text-gray-500">File insurance claim</div>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-blue-600" />
+                    </Link>
+
+                    <Link
+                      href="/customer/policies"
+                      className="flex items-center justify-between p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <ShieldCheck className="w-5 h-5 text-green-600" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">View Policies</div>
+                          <div className="text-xs text-gray-500">Manage insurance policies</div>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-green-600" />
+                    </Link>
+
+                    <Link
+                      href="/customer/profile"
+                      className="flex items-center justify-between p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <UserCheck className="w-5 h-5 text-purple-600" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">My Profile</div>
+                          <div className="text-xs text-gray-500">Update personal information</div>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-purple-600" />
+                    </Link>
+                  </>
+                )}
+
+                {isInsurer && (
+                  <>
+                    <Link
+                      href="/insurer/review-claims"
+                      className="flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Eye className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Review Claims</div>
+                          <div className="text-xs text-gray-500">Process and verify claims</div>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-blue-600" />
+                    </Link>
+
+                    <Link
+                      href="/insurer/analytics"
+                      className="flex items-center justify-between p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <BarChart3 className="w-5 h-5 text-green-600" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Analytics</div>
+                          <div className="text-xs text-gray-500">View fraud detection analytics</div>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-green-600" />
+                    </Link>
+
+                    <Link
+                      href="/insurer/customers"
+                      className="flex items-center justify-between p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Users className="w-5 h-5 text-purple-600" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Manage Customers</div>
+                          <div className="text-xs text-gray-500">View and manage customer accounts</div>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-purple-600" />
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
-          </Link>
-
-          {/* Term/Life Insurance */}
-          <Link href="/insurance/life" className="group">
-            <div className="border border-gray-200 rounded-xl p-8 h-full bg-white hover:border-blue-400 hover:shadow-lg transition-all">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-4 bg-purple-50 rounded-xl group-hover:bg-purple-100 transition-colors">
-                  <UserCheck className="text-purple-600 w-8 h-8" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Term/Life Insurance</h3>
-                  <p className="text-gray-600">Life insurance claims, policy fraud detection</p>
-                </div>
-              </div>
-              <div className="flex items-center text-purple-600 font-medium group-hover:gap-2 transition-all">
-                Get Started <ArrowRight className="ml-1 w-5 h-5" />
-              </div>
-            </div>
-          </Link>
-
-          {/* Corporate/Property Insurance */}
-          <Link href="/insurance/corporate" className="group">
-            <div className="border border-gray-200 rounded-xl p-8 h-full bg-white hover:border-blue-400 hover:shadow-lg transition-all">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-4 bg-orange-50 rounded-xl group-hover:bg-orange-100 transition-colors">
-                  <Building2 className="text-orange-600 w-8 h-8" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Corporate/Property Insurance</h3>
-                  <p className="text-gray-600">Business property, commercial claims, corporate fraud</p>
-                </div>
-              </div>
-              <div className="flex items-center text-orange-600 font-medium group-hover:gap-2 transition-all">
-                Get Started <ArrowRight className="ml-1 w-5 h-5" />
-              </div>
-            </div>
-          </Link>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="border-t border-gray-200 pt-8">
-          <div className="flex justify-center gap-6">
-            <Link 
-              href="/login" 
-              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link 
-              href="/submit" 
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-            >
-              Submit Claim
-            </Link>
           </div>
         </div>
-      </div>
-
-      <footer className="mt-20 text-gray-500 text-sm flex items-center gap-6">
-        <span>© 2026 BitWizard</span>
-        <span className="flex items-center gap-1"><ShieldCheck className="w-4 h-4 text-blue-600" /> Secure FHIR Gateway v4.0.1</span>
-      </footer>
+      </main>
     </div>
   );
 }
+
+// New home page dashboard with role-based navigation
+// TODO: Implement role-based navigation
+// TODO: Add dashboard components (e.g. charts, tables, etc.)
